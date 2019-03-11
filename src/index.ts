@@ -32,12 +32,10 @@ let running = false
 
 const parser = new Parser()
 
-const getNewestFeedItems = async (old: Date | string) => {
+const getNewestFeedItems = log.on(async (old: Date | string) => {
   const feed = await parser.parseURL('https://www.heise.de/rss/heise.rdf')
-  const items = feed.items.filter(item => isAfter(item.isoDate, old))
-  console.log(items[0])
-  return items
-}
+  return feed.items.filter(item => isAfter(item.isoDate, old))
+}, 'getNewestFeedItems')
 
 const checkForNewItems = async () => {
   if(running)
@@ -57,12 +55,12 @@ const checkForNewItems = async () => {
   return storeItems(datetime)
 }
 
-const triggerEvent = (event: string, data: any) => client.mutate({
+const triggerEvent = log.on((event: string, data: any) => client.mutate({
   mutation: gql`mutation CreateEvent($event: String!, $data: SequelizeJSON) {
     triggerEvent(name: $event, data: $data)
   }`,
   variables: { event, data },
-})
+}), 'trigger')
 
 const triggerError = (error: string) => triggerEvent('heise-feed:error', { error })
 
