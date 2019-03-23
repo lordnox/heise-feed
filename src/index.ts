@@ -55,11 +55,11 @@ const checkForNewItems = async () => {
   return storeItems(datetime)
 }
 
-const triggerEvent = log.on((event: string, data: any) => client.mutate({
-  mutation: gql`mutation CreateEvent($event: String!, $data: SequelizeJSON) {
-    triggerEvent(name: $event, data: $data)
+const triggerEvent = log.on((event: string, data: any, info: string = null) => client.mutate({
+  mutation: gql`mutation CreateEvent($event: String!, $data: SequelizeJSON, $info: String) {
+    triggerEvent(name: $event, data: $data, info: $info)
   }`,
-  variables: { event, data },
+  variables: { event, data, info },
 }), 'trigger')
 
 const triggerError = (error: string) => triggerEvent('heise-feed:error', { error })
@@ -91,7 +91,10 @@ const storeItems = async (from: Date | string) => {
     title: item.title,
     url: item.link,
   })))
-  triggerEvent('heise-feed:result', { items: items.length, from })
+  if(items.length) {
+    const info = items.length === 1 ? 'There is a new article' : `There are ${items.length} new articles`
+    triggerEvent('heise-feed:result', { items: items.length, from }, info)
+  }
   running = false
 }
 
@@ -105,7 +108,7 @@ observer
 .map(({ data: { event, data } }) => ({ event: event.name.slice(11), data }))
 .forEach(({ event, data }) => {
   log(event, data)
-  if(event === 'start') return checkForNewItems()
+  if(event === 'start') return checkForNewItems().catch(err => console.error(err))
   // if(event.name === 'heise-feed')
   return true
 })
