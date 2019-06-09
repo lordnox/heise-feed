@@ -14,21 +14,21 @@
   "dependencies": {
     "@raynode/nx-logger": "^6.1.1",
     "@raynode/nx-logger-debug": "^1.1.1",
-    "apollo-cache-inmemory": "^1.3.11",
-    "apollo-client": "^2.4.7",
-    "apollo-link-ws": "^1.0.10",
+    "apollo-cache-inmemory": "^1.6.2",
+    "apollo-client": "^2.6.2",
+    "apollo-link-ws": "^1.0.17",
     "date-fns": "^1.30.1",
-    "graphql": "^14.0.2",
-    "graphql-tag": "^2.10.0",
-    "moment": "^2.22.2",
-    "rss-parser": "^3.6.0",
-    "subscriptions-transport-ws": "^0.9.15",
-    "ts-node": "^7.0.1",
-    "tsconfig-paths": "^3.7.0",
-    "typescript": "^3.2.1",
-    "ws": "^6.1.2"
+    "graphql": "^14.3.1",
+    "graphql-tag": "^2.10.1",
+    "moment": "^2.24.0",
+    "rss-parser": "^3.7.1",
+    "subscriptions-transport-ws": "^0.9.16",
+    "ts-node": "^8.2.0",
+    "tsconfig-paths": "^3.8.0",
+    "typescript": "^3.5.1",
+    "ws": "^7.0.0"
   },
   "devDependencies": {
-    "nodemon": "^1.18.7"
+    "nodemon": "^1.19.1"
   }
 }
