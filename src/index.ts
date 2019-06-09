@@ -44,8 +44,8 @@ const checkForNewItems = async () => {
   log('Checking for new items')
   const { data } = await client.query({
     query: gql`query {
-      link: Link(
-        where: { tags_some: { tag: "Heise" }}
+      link: getLink(
+        where: { tags_contains: "Heise"}
         order: datetime_DESC
       ) { datetime }
     }`,
@@ -56,7 +56,7 @@ const checkForNewItems = async () => {
 }
 
 const triggerEvent = log.on((event: string, data: any, info: string = null) => client.mutate({
-  mutation: gql`mutation CreateEvent($event: String!, $data: SequelizeJSON, $info: String) {
+  mutation: gql`mutation CreateEvent($event: String!, $data: JSON, $info: String) {
     triggerEvent(name: $event, data: $data, info: $info)
   }`,
   variables: { event, data, info },
@@ -72,12 +72,12 @@ interface Link {
 }
 
 const createLink = async (item: Link) => client.mutate({
-  mutation: gql`mutation createLink($title: String!, $url: String!, $date: Date!){
+  mutation: gql`mutation createLink($title: String!, $url: String!, $date: DateTime!){
     createLink(data: {
       title: $title
       url: $url
       datetime: $date
-      tags: { tag: "Heise" }
+      tags: ["Heise"]
     }) { id createdAt }
   }`,
   variables: { title: item.title, url: item.url, date: item.datetime },
