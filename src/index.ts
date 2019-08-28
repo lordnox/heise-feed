@@ -62,7 +62,11 @@ const triggerEvent = log.on((event: string, data: any, info: string = null) => c
   variables: { event, data, info },
 }), 'trigger')
 
-const triggerError = (error: string) => triggerEvent('heise-feed:error', { error })
+const triggerError = (error: string) => triggerEvent(
+  'heise-feed:error',
+  { error },
+  "Heise-Feed reports an error",
+)
 
 interface Link {
   url: string
@@ -71,17 +75,23 @@ interface Link {
   title: string
 }
 
-const createLink = async (item: Link) => client.mutate({
-  mutation: gql`mutation createLink($title: String!, $url: String!, $date: DateTime!){
-    createLink(data: {
-      title: $title
-      url: $url
-      datetime: $date
-      tags: ["Heise"]
-    }) { id createdAt }
-  }`,
-  variables: { title: item.title, url: item.url, date: item.datetime },
-})
+const createLink = async (item: Link) => {
+  try {
+    return client.mutate({
+      mutation: gql`mutation createLink($title: String!, $url: String!, $date: DateTime!){
+        createLink(data: {
+          title: $title
+          url: $url
+          datetime: $date
+          tags: ["Heise"]
+        }) { id createdAt }
+      }`,
+      variables: { title: item.title, url: item.url, date: item.datetime },
+    })
+  } catch (error) {
+    triggerError(error)
+  }
+}
 
 const storeItems = async (from: Date | string) => {
   const items = await getNewestFeedItems(from)
