@@ -90,6 +90,7 @@ const createLink = async (item: Link) => {
     })
   } catch (error) {
     triggerError(error)
+    return null
   }
 }
 
