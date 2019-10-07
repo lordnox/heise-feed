@@ -60,11 +60,11 @@ const triggerEvent = log.on((event: string, data: any, info: string = null) => c
     triggerEvent(name: $event, data: $data, info: $info)
   }`,
   variables: { event, data, info },
-}), 'trigger')
+}).catch(log), 'trigger')
 
-const triggerError = (error: string) => triggerEvent(
+const triggerError = (error: string, data?: any) => triggerEvent(
   'heise-feed:error',
-  { error },
+  { error, data },
   "Heise-Feed reports an error",
 )
 
@@ -76,22 +76,21 @@ interface Link {
 }
 
 const createLink = async (item: Link) => {
-  try {
-    return client.mutate({
-      mutation: gql`mutation createLink($title: String!, $url: String!, $date: DateTime!){
-        createLink(data: {
-          title: $title
-          url: $url
-          datetime: $date
-          tags: ["Heise"]
-        }) { id createdAt }
-      }`,
-      variables: { title: item.title, url: item.url, date: item.datetime },
-    })
-  } catch (error) {
-    triggerError(error)
+  return client.mutate({
+    mutation: gql`mutation createLink($title: String!, $url: String!, $date: DateTime!){
+      createLink(data: {
+        title: $title
+        url: $url
+        datetime: $date
+        tags: ["Heise"]
+      }) { id createdAt }
+    }`,
+    variables: { title: item.title, url: item.url, date: item.datetime },
+  })
+  .catch(error => {
+    triggerError(error, { item })
     return null
-  }
+  })
 }
 
 const storeItems = async (from: Date | string) => {
@@ -127,13 +126,10 @@ observer
 client.subscribe({
   query: gql`subscription { event: eventListener(name: "ping") { name, data }}`,
 })
-.filter(({ data: { event }}) => {
-  console.log(event)
-  return event.data
-    && typeof event.data.name === 'string'
-    && typeof event.data.state === 'string'
-    && event.data.name === 'heise-feed'
-})
+.filter(({ data: { event }}) => event.data
+  && typeof event.data.name === 'string'
+  && typeof event.data.state === 'string'
+  && event.data.name === 'heise-feed')
 .forEach(({ data: { event } }) => {
   log('ping', event.data)
   client.mutate({
@@ -144,5 +140,5 @@ client.subscribe({
         )
       }`,
       variables: { data: event.data },
-    })
-})
+    }).catch(log)
+}).catch(log)
