@@ -34,7 +34,7 @@ const parser = new Parser()
 
 const getNewestFeedItems = log.on(async (old: Date | string) => {
   const feed = await parser.parseURL('https://www.heise.de/rss/heise.rdf')
-  return feed.items.filter(item => isAfter(item.isoDate, old))
+  return feed.items //.filter(item => isAfter(item.isoDate, old))
 }, 'getNewestFeedItems')
 
 const checkForNewItems = async () => {
@@ -113,7 +113,7 @@ const observer = client.subscribe({
   query: gql`subscription { event: eventListener(name: "*") { name }}`,
 })
 
-log('observer started')
+log(`observer started at ${GRAPHQL_SERVER_URI}`)
 observer
 .filter(({ data: { event } }) => event.name.startsWith('heise-feed:'))
 .map(({ data: { event, data } }) => ({ event: event.name.slice(11), data }))
@@ -122,4 +122,27 @@ observer
   if(event === 'start') return checkForNewItems().catch(err => console.error(err))
   // if(event.name === 'heise-feed')
   return true
+})
+
+client.subscribe({
+  query: gql`subscription { event: eventListener(name: "ping") { name, data }}`,
+})
+.filter(({ data: { event }}) => {
+  console.log(event)
+  return event.data
+    && typeof event.data.name === 'string'
+    && typeof event.data.state === 'string'
+    && event.data.name === 'heise-feed'
+})
+.forEach(({ data: { event } }) => {
+  log('ping', event.data)
+  client.mutate({
+      mutation: gql`mutation($data: JSON) {
+        triggerEvent(
+          name: "pong"
+          data: $data
+        )
+      }`,
+      variables: { data: event.data },
+    })
 })
